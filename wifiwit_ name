@@ -1,0 +1,49 @@
+import os
+import socket
+import subprocess
+from scapy.all import ARP, Ether, srp
+
+# Function to get device names based on IP addresses
+def get_device_name(ip):
+    try:
+        # Attempt to resolve the device name (hostname) using socket
+        host = socket.gethostbyaddr(ip)
+        return host[0]  # Return the hostname
+    except socket.herror:
+        return "Unknown Device"
+
+# Function to scan the local network
+def scan_network(ip_range):
+    devices = []
+    try:
+        # Create ARP request and Ethernet frame for broadcast
+        arp_request = ARP(pdst=ip_range)
+        broadcast = Ether(dst="ff:ff:ff:ff:ff:ff")
+        arp_request_broadcast = broadcast / arp_request
+
+        # Send ARP request and capture responses
+        answered_list = srp(arp_request_broadcast, timeout=2, verbose=False)[0]
+
+        for sent, received in answered_list:
+            ip = received.psrc
+            mac = received.hwsrc
+            # Attempt to get the device name
+            device_name = get_device_name(ip)
+            devices.append({'ip': ip, 'mac': mac, 'name': device_name})
+
+    except Exception as e:
+        print(f"Error scanning the network: {e}")
+
+    return devices
+
+# Main function to execute the script
+if __name__ == "__main__":
+    print("Scanning the network for connected devices...")
+
+    # Set the IP range of your local network (you can adjust this as needed)
+    ip_range = "192.168.1.1/24"  # Adjust this if your local network uses a different range
+    connected_devices = scan_network(ip_range)
+
+    print(f"Found {len(connected_devices)} device(s) connected to the network:")
+    for idx, device in enumerate(connected_devices, start=1):
+        print(f"{idx}. IP: {device['ip']}, MAC: {device['mac']}, Device Name: {device['name']}")
